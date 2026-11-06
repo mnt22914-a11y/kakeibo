@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0B0D">
+<title>レシート家計簿</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="家計簿">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@300;400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- 上部：ロゴと月の切り替え -->
+  <header class="top">
+    <span class="brand">KAKEIBO</span>
+    <div class="month">
+      <button id="prevMonth" class="icon-btn" type="button" aria-label="前の月">‹</button>
+      <button id="monthLabel" class="month-label" type="button" aria-label="今月に戻る">
+        <span id="monthEn">NOVEMBER</span>
+        <span id="monthJa">2026年11月</span>
+      </button>
+      <button id="nextMonth" class="icon-btn" type="button" aria-label="次の月">›</button>
+    </div>
+    <button id="settingsBtn" class="icon-btn" type="button" aria-label="設定">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <!-- ===== ホーム ===== -->
+    <div id="homeView">
+    <!-- 今月の収支 -->
+    <section class="hero card">
+      <p class="label">BALANCE<span>今月の収支</span></p>
+      <p class="hero-amount" id="balance">¥0</p>
+      <div class="split">
+        <div>
+          <p class="label">INCOME<span>収入</span></p>
+          <p class="sub-amount income" id="incomeTotal">¥0</p>
+        </div>
+        <div>
+          <p class="label">EXPENSE<span>支出</span></p>
+          <p class="sub-amount" id="expenseTotal">¥0</p>
+        </div>
+      </div>
+      <p id="compare" class="compare" hidden></p>
+    </section>
+
+    <!-- カテゴリ別の支出 -->
+    <section id="spending" class="spending" hidden>
+      <div class="section-head">
+        <h2 class="label">SPENDING<span>カテゴリ別の支出</span></h2>
+        <span class="muted">タップで絞り込み</span>
+      </div>
+      <div id="spendList" class="spend-list"></div>
+    </section>
+
+    <!-- 記録の一覧 -->
+    <section>
+      <div class="section-head">
+        <h2 class="label">RECORDS<span>記録</span></h2>
+        <span id="count" class="muted"></span>
+      </div>
+      <div class="filters">
+        <button type="button" data-filter="all" class="active">すべて</button>
+        <button type="button" data-filter="expense">支出</button>
+        <button type="button" data-filter="income">収入</button>
+        <button type="button" id="catFilter" class="cat-filter" hidden aria-label="カテゴリの絞り込みを解除"></button>
+      </div>
+      <div id="list"></div>
+    </section>
+    </div>
+
+    <!-- ===== レシート一覧 ===== -->
+    <div id="receiptsView" hidden>
+      <div class="section-head">
+        <h2 class="label">RECEIPTS<span>レシート</span></h2>
+        <span id="receiptsSummary" class="muted"></span>
+      </div>
+      <div id="receiptGrid" class="receipt-grid"></div>
+    </div>
+  </main>
+
+  <!-- 画面下のボタン -->
+  <nav class="dock">
+    <button id="addBtn" class="dock-btn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span>手入力</span>
+    </button>
+    <button id="scanBtn" class="scan" type="button" aria-label="レシートを読み取る">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>
+      SCAN
+    </button>
+    <button id="viewBtn" class="dock-btn" type="button">
+      <svg id="iconReceipts" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+      <svg id="iconHome" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" hidden><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg>
+      <span id="viewLabel">レシート</span>
+    </button>
+  </nav>
+</div>
+
+<!-- 入力シート（下から出てくる画面） -->
+<div id="backdrop" class="backdrop" hidden></div>
+<form id="sheet" class="sheet" hidden autocomplete="off" novalidate>
+  <div class="grip"></div>
+  <div class="sheet-head">
+    <h3 id="sheetTitle">記録する</h3>
+    <button type="button" id="closeSheet" class="icon-btn" aria-label="閉じる">×</button>
+  </div>
+
+  <!-- レシート写真と読み取りの状態 -->
+  <div id="receiptBox" class="receipt-box" hidden>
+    <button type="button" id="receiptThumb" class="receipt-thumb" aria-label="写真を拡大">
+      <img id="receiptImg" alt="レシートの写真">
+      <span class="scanline"></span>
+    </button>
+    <div class="receipt-status">
+      <p id="receiptTitle">読み取り中…</p>
+      <p id="receiptNote" class="muted">AI がレシートを読んでいます</p>
+      <button type="button" id="rescanBtn" class="text-btn" hidden>撮り直す</button>
+    </div>
+  </div>
+
+  <div class="seg">
+    <button type="button" data-type="expense" class="active">支出</button>
+    <button type="button" data-type="income">収入</button>
+  </div>
+
+  <label class="amount-field" id="amountField">
+    <span class="yen">¥</span>
+    <input id="amount" inputmode="numeric" placeholder="0" aria-label="金額">
+  </label>
+
+  <p class="field-label">カテゴリ</p>
+  <div id="chips" class="chips"></div>
+
+  <!-- レシートのカテゴリ別の内訳(複数カテゴリのときだけ出る) -->
+  <div id="breakdownBox" class="breakdown" hidden>
+    <p class="field-label">内訳<span>AI がカテゴリごとに分けた小計</span></p>
+    <div id="breakdownList"></div>
+  </div>
+
+  <label class="field"><span>日付</span><input type="date" id="date"></label>
+  <label class="field" id="storeField"><span>お店</span><input id="store" placeholder="例: スーパー〇〇"></label>
+  <label class="field"><span>メモ</span><input id="memo" placeholder="任意"></label>
+
+  <button type="submit" class="primary">保存する</button>
+  <button type="button" id="deleteBtn" class="danger" hidden>この記録を削除</button>
+</form>
+
+<!-- 設定 -->
+<div id="settings" class="sheet" hidden>
+  <div class="grip"></div>
+  <div class="sheet-head">
+    <h3>設定</h3>
+    <button type="button" class="icon-btn" data-close aria-label="閉じる">×</button>
+  </div>
+
+  <!-- 固定収入 -->
+  <section class="set-sec">
+    <p class="label">FIXED INCOME<span>固定収入</span></p>
+    <p class="help">給料など毎月決まった収入を登録すると、毎月その日に自動で記録されます。</p>
+    <div id="recurList" class="set-list"></div>
+    <form id="recurForm" class="set-form" hidden autocomplete="off" novalidate>
+      <label class="field"><span>名前</span><input id="recurName" placeholder="例: 給料" maxlength="20"></label>
+      <label class="field"><span>金額</span><input id="recurAmount" inputmode="numeric" placeholder="0"></label>
+      <label class="field"><span>毎月</span><select id="recurDay"></select></label>
+      <div id="recurChips" class="chips"></div>
+      <label class="check-row" id="recurNowRow"><input type="checkbox" id="recurNow" checked><span id="recurNowText"></span></label>
+      <div class="row-btns">
+        <button type="button" id="recurCancel" class="outline">やめる</button>
+        <button type="submit" class="primary small">保存する</button>
+      </div>
+      <button type="button" id="recurDelete" class="danger" hidden>この固定収入を削除</button>
+    </form>
+    <button type="button" id="recurAdd" class="add-btn">＋ 固定収入を追加</button>
+  </section>
+
+  <!-- カテゴリ -->
+  <section class="set-sec">
+    <p class="label">CATEGORIES<span>カテゴリ</span></p>
+    <div class="seg" id="catSeg">
+      <button type="button" data-cat-type="expense" class="active">支出</button>
+      <button type="button" data-cat-type="income">収入</button>
+    </div>
+    <div id="catList" class="set-list"></div>
+    <form id="catAddForm" class="cat-add" autocomplete="off" novalidate>
+      <input id="catNew" placeholder="新しいカテゴリ名" maxlength="10">
+      <button type="submit">追加</button>
+    </form>
+    <p class="help">名前を書き換えると、これまでの記録のカテゴリ名も変わります。削除したカテゴリの記録は「その他」に移ります。</p>
+  </section>
+
+  <!-- バックアップ -->
+  <section class="set-sec">
+    <p class="label">BACKUP<span>バックアップ</span></p>
+    <p class="help">データはこのブラウザの中だけにあります。ときどき「書き出す」でファイルに保存しておくと、パソコンの故障やブラウザのデータ削除のときも元に戻せます。</p>
+    <p id="backupInfo" class="help gold"></p>
+    <div class="row-btns">
+      <button type="button" id="exportBtn" class="outline">書き出す</button>
+      <button type="button" id="importBtn" class="outline">読み込む</button>
+    </div>
+    <input id="importInput" type="file" accept="application/json,.json" hidden>
+  </section>
+
+  <!-- 合言葉 -->
+  <section class="set-sec" id="keySection">
+    <p class="label">PASSCODE<span>レシート読み取りの合言葉</span></p>
+    <p id="settingsNote" class="help gold" hidden></p>
+    <form id="keyForm" autocomplete="off" novalidate>
+      <label class="field"><span>合言葉</span><input id="passcode" type="password" placeholder="Supabase に登録した合言葉" spellcheck="false" autocapitalize="off" autocomplete="off"></label>
+      <p class="help">Supabase の Secrets に APP_PASSCODE として登録したものと同じ合言葉を入れます。使う端末ごとに 1 回だけ入れればよく、バックアップには含まれません。API キーそのものは Supabase にだけあり、この端末には入りません。</p>
+      <div class="row-btns">
+        <button type="button" id="clearKeyBtn" class="outline">合言葉を削除</button>
+        <button type="submit" class="primary small">保存する</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<!-- 写真の拡大表示 -->
+<div id="viewer" class="viewer" hidden><img id="viewerImg" alt="レシートの写真"></div>
+
+<!-- カメラ撮影画面 -->
+<div id="camera" class="camera" hidden>
+  <div class="camera-view">
+    <video id="cameraVideo" playsinline muted autoplay></video>
+    <div class="camera-frame"><i></i><i></i><i></i><i></i></div>
+    <div id="cameraFlash" class="camera-flash"></div>
+  </div>
+  <p id="cameraHint" class="camera-hint">レシート全体が入るように写してください</p>
+  <div class="camera-bar">
+    <button type="button" id="pickFileBtn" class="cam-side">写真を<br>選ぶ</button>
+    <button type="button" id="shutterBtn" class="shutter" aria-label="撮影する"></button>
+    <button type="button" id="cameraClose" class="cam-side">やめる</button>
+  </div>
+</div>
+
+<!-- 撮影・写真選び(画面には出ない) -->
+<input id="fileInput" type="file" accept="image/*" hidden>
+
+<div id="toast" class="toast" role="status"></div>
+
+<script src="config.js"></script>
+<script src="db.js"></script>
+<script src="receipt.js"></script>
+<script src="app.js"></script>
+<script src="settings.js"></script>
+</body>
+</html>
