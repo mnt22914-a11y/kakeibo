@@ -108,6 +108,15 @@ AI はレシートの店名と内容から、この中のどれかを選ぶ。�
 - 合計は「合計」「お買上計」など税込の最終金額を採る。お預り・お釣りは採らない
 - 日付が読めなければ今日の日付にし、確認画面で目立たせる
 
+### 段階5で決まった公開の形（2026-11-06）
+- アプリ本体：GitHub の公開リポジトリ mnt22914-a11y/kakeibo → GitHub Pages（https://mnt22914-a11y.github.io/kakeibo/）。ホーム画面に追加できる PWA（manifest・アイコン・sw.js）
+- AI の中継役：Supabase（家計簿専用の新しいプロジェクト）の Edge Function `read-receipt`（supabase/functions/read-receipt/index.ts）
+  - API キー（ANTHROPIC_API_KEY）と合言葉（APP_PASSCODE）は Supabase の Secrets にだけ置く。アプリには入れない
+  - アプリは合言葉を付けて写真を送る。AI への指示・JSON の形・モデル（claude-haiku-5-5）は中継役の側で決める（ほかの使い方をされないように）
+  - 中継役の URL は config.js の RELAY_URL に書く（公開されても合言葉がないと使えない）
+  - 念のため Anthropic 側で月の利用上限を設定しておく
+- データはこれまでどおり端末ごと（PC とスマホは別）。PC のデータは「書き出す」→ スマホで「読み込む」で移す
+
 ## 7. データの形
 
 あとで家族共有（クラウド保存）に移しやすいよう、最初から 1 件ずつ ID を付けておく。
