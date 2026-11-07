@@ -1,6 +1,6 @@
 // オフラインでも開けるようにする係(サービスワーカー)。
 // いつもはネットから最新を取り、つながらないときだけ保存しておいたものを使う。
-const CACHE = 'kakeibo-v1';
+const CACHE = 'kakeibo-v2';
 const SHELL = [
   './', './index.html', './style.css', './config.js', './db.js', './receipt.js', './app.js', './settings.js',
   './manifest.webmanifest', './icons/icon-192.png', './icons/apple-touch-icon.png',

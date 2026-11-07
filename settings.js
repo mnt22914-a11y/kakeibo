@@ -381,7 +381,7 @@ async function importBackup(file) {
   let data;
   try { data = JSON.parse(await file.text()); } catch { data = null; }
   if (data?.app !== 'kakeibo' || !Array.isArray(data.records)) {
-    toast('家計簿のバックアップファイルではないようです');
+    toast('SCANs のバックアップファイルではないようです');
     return;
   }
   const when = new Date(data.exportedAt);

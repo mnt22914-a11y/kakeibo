@@ -1,6 +1,6 @@
 {
-  "name": "レシート家計簿",
-  "short_name": "家計簿",
+  "name": "SCANs",
+  "short_name": "SCANs",
   "description": "レシートを撮るだけで収支がわかる家計簿",
   "lang": "ja",
   "start_url": "./",
